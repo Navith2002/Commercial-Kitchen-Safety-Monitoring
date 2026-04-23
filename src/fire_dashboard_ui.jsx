@@ -123,16 +123,8 @@ function SidebarItem({
   );
 }
 
-function HalfGauge({
-  value,
-  theme,
-  title,
-  subtitle,
-  type = "flame",
-  maxValue = 100,
-  valueSuffix = "%",
-}) {
-  const safeValue = Math.max(0, Math.min(maxValue, Number(value) || 0));
+function HalfGauge({ value, theme, title, subtitle, type = "flame" }) {
+  const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
 
   const cx = 140;
   const cy = 135;
@@ -170,7 +162,7 @@ function HalfGauge({
   ];
 
   const segments = type === "signal" ? signalSegments : flameSegments;
-  const pointerDeg = 180 - (safeValue / maxValue) * 180;
+  const pointerDeg = 180 - (safeValue / 100) * 180;
   const pointer = pointAt(pointerDeg, 70);
 
   return (
@@ -244,8 +236,7 @@ function HalfGauge({
             lineHeight: 1,
           }}
         >
-          {safeValue}
-          {valueSuffix}
+          {safeValue}%
         </div>
 
         <div
@@ -272,22 +263,6 @@ function GaugeCard({ value = 18, theme }) {
       title="Flame Indicator"
       subtitle="flame_intensity (%)"
       type="flame"
-      maxValue={100}
-      valueSuffix="%"
-    />
-  );
-}
-
-function GasGaugeCard({ value = 320, theme }) {
-  return (
-    <HalfGauge
-      value={value}
-      theme={theme}
-      title="Gas Level Indicator"
-      subtitle="gas_level_ppm"
-      type="flame"
-      maxValue={1000}
-      valueSuffix=""
     />
   );
 }
@@ -300,13 +275,11 @@ function SignalStrengthCard({ value = 46, theme }) {
       title="Sensor Signal Strength Indicator"
       subtitle="Medium Flame Signal (%)"
       type="signal"
-      maxValue={100}
-      valueSuffix="%"
     />
   );
 }
 
-function ChartCard({ chartData, theme, title, yDomain = [0, 100], lineKey = "intensity" }) {
+function ChartCard({ chartData, theme }) {
   return (
     <div
       style={{
@@ -325,7 +298,7 @@ function ChartCard({ chartData, theme, title, yDomain = [0, 100], lineKey = "int
           color: theme.textMain,
         }}
       >
-        {title}
+        Fire Detection in last 24 hours
       </h3>
 
       <div
@@ -379,14 +352,14 @@ function ChartCard({ chartData, theme, title, yDomain = [0, 100], lineKey = "int
               tickLine={false}
             />
             <YAxis
-              domain={yDomain}
+              domain={[0, 100]}
               tick={{ fill: theme.textMuted, fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
             <Line
               type="monotone"
-              dataKey={lineKey}
+              dataKey="intensity"
               stroke={theme.textMain}
               strokeWidth={3}
               dot={false}
@@ -613,328 +586,6 @@ function LiveTableCard({ rows, theme }) {
   );
 }
 
-function GasLiveTableCard({ rows, theme }) {
-  const getStatusPillStyle = (status) => {
-    const normalized = String(status || "").toUpperCase();
-    if (normalized.includes("DANGER")) {
-      return { background: "#ef4444", color: "#111827" };
-    }
-    if (normalized.includes("WARNING")) {
-      return { background: "#f59e0b", color: "#111827" };
-    }
-    return { background: "#4ade80", color: "#111827" };
-  };
-
-  return (
-    <div
-      style={{
-        background: theme.cardBg,
-        borderRadius: "24px",
-        padding: "20px",
-        boxShadow: theme.shadow,
-        boxSizing: "border-box",
-      }}
-    >
-      <h3
-        style={{
-          margin: "0 0 16px 0",
-          fontSize: "14px",
-          fontWeight: 600,
-          color: theme.textMain,
-        }}
-      >
-        LP Gas Sensor Live Data
-      </h3>
-
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            color: theme.textMain,
-            fontSize: "14px",
-          }}
-        >
-          <thead>
-            <tr>
-              {["timestamp", "gas_level_ppm", "gas_status", "alert_triggered"].map(
-                (head) => (
-                  <th
-                    key={head}
-                    style={{
-                      paddingBottom: "12px",
-                      textAlign: "left",
-                      borderBottom: `1px solid ${theme.tableBorder}`,
-                    }}
-                  >
-                    {head}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={index}>
-                <td
-                  style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${theme.tableBorder}`,
-                    color: theme.textSoft,
-                    fontSize: "13px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {row.timestamp}
-                </td>
-                <td
-                  style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${theme.tableBorder}`,
-                    color: theme.textSoft,
-                    textAlign: "center",
-                  }}
-                >
-                  {row.gasPpm}
-                </td>
-                <td
-                  style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${theme.tableBorder}`,
-                    color: theme.textSoft,
-                    textAlign: "center",
-                    fontWeight: 700,
-                  }}
-                >
-                  <span
-                    style={{
-                      ...getStatusPillStyle(row.status),
-                      borderRadius: "999px",
-                      padding: "4px 12px",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {row.status}
-                  </span>
-                </td>
-                <td
-                  style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${theme.tableBorder}`,
-                    color: theme.textSoft,
-                    textAlign: "center",
-                  }}
-                >
-                  {row.triggered}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function GasFilterCard({ theme }) {
-  return (
-    <div
-      style={{
-        background: theme.cardBg,
-        borderRadius: "24px",
-        padding: "20px",
-        boxShadow: theme.shadow,
-        boxSizing: "border-box",
-      }}
-    >
-      <h3
-        style={{
-          margin: "0 0 16px 0",
-          fontSize: "14px",
-          fontWeight: 600,
-          color: theme.textMain,
-        }}
-      >
-        Filter Date
-      </h3>
-      <div style={{ display: "grid", gap: "12px" }}>
-        <select
-          style={{
-            padding: "10px 14px",
-            borderRadius: "999px",
-            border: `1px solid ${theme.tableBorder}`,
-            background: theme.inputBg,
-            color: theme.textMain,
-            outline: "none",
-            cursor: "pointer",
-          }}
-        >
-          <option>Month</option>
-        </select>
-        <select
-          style={{
-            padding: "10px 14px",
-            borderRadius: "999px",
-            border: `1px solid ${theme.tableBorder}`,
-            background: theme.inputBg,
-            color: theme.textMain,
-            outline: "none",
-            cursor: "pointer",
-          }}
-        >
-          <option>Date</option>
-        </select>
-      </div>
-    </div>
-  );
-}
-
-function GasInfoChartCard({ title, rightLabels, xLabel, theme }) {
-  return (
-    <div
-      style={{
-        background: theme.cardBg,
-        borderRadius: "24px",
-        padding: "20px",
-        boxShadow: theme.shadow,
-        boxSizing: "border-box",
-      }}
-    >
-      <h3
-        style={{
-          margin: "0 0 16px 0",
-          fontSize: "14px",
-          fontWeight: 600,
-          color: theme.textMain,
-        }}
-      >
-        {title}
-      </h3>
-      <div
-        style={{
-          position: "relative",
-          height: "250px",
-          borderRadius: "16px",
-          overflow: "hidden",
-          border: `1px solid ${theme.headerBorder}`,
-          background: theme.chartBg,
-        }}
-      >
-        <div style={{ position: "absolute", inset: 0, background: "rgba(239, 68, 68, 0.14)" }} />
-        <div style={{ position: "absolute", inset: "33% 0 0 0", background: "rgba(245, 158, 11, 0.10)" }} />
-        <div style={{ position: "absolute", inset: "66% 0 0 0", background: "rgba(74, 222, 128, 0.14)" }} />
-
-        {rightLabels.map((label) => (
-          <div
-            key={label.text}
-            style={{
-              position: "absolute",
-              right: "14px",
-              top: label.top,
-              color: label.color,
-              fontSize: "16px",
-              fontWeight: 600,
-            }}
-          >
-            {label.text}
-          </div>
-        ))}
-
-        <div
-          style={{
-            position: "absolute",
-            left: "12px",
-            bottom: "8px",
-            color: theme.textMuted,
-            fontSize: "12px",
-          }}
-        >
-          {xLabel}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LPGasDashboardPage({ gasData, gasLevelPpm, gasChartData, gasRows, theme }) {
-  const gasStatus = gasData?.gas_status || gasData?.status || "No Gas Leakage Detected";
-  const gasBannerStyle =
-    gasLevelPpm >= 550
-      ? { background: "#ef4444", color: "white" }
-      : gasLevelPpm >= 350
-      ? { background: "#fbbf24", color: "#18181b" }
-      : { background: "#74d890", color: "#18181b" };
-
-  const gasAlerts =
-    gasRows.filter((row) => row.triggered === "YES").length > 0
-      ? [
-          { title: "Gas Leak Detected", time: new Date().toLocaleTimeString() },
-          { title: "High Temperature Warning", time: new Date().toLocaleTimeString() },
-        ]
-      : [{ title: "No recent alerts", time: "--" }];
-
-  return (
-    <>
-      <div
-        style={{
-          marginBottom: "16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          borderRadius: "16px",
-          padding: "16px 20px",
-          fontWeight: 500,
-          ...gasBannerStyle,
-        }}
-      >
-        <Shield size={18} />
-        <span>System status : {gasStatus}</span>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: "16px" }}>
-        <GasGaugeCard value={gasLevelPpm} theme={theme} />
-        <ChartCard
-          chartData={gasChartData}
-          theme={theme}
-          title="Gas Level"
-          yDomain={[0, 700]}
-          lineKey="ppm"
-        />
-        <AlertsCard alerts={gasAlerts} theme={theme} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "16px", marginTop: "16px" }}>
-        <GasLiveTableCard rows={gasRows} theme={theme} />
-        <GasFilterCard theme={theme} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
-        <GasInfoChartCard
-          title="Gas Level With Temperature"
-          xLabel="temp. (°C)"
-          theme={theme}
-          rightLabels={[
-            { text: "Danger", top: "28%", color: "#dc2626" },
-            { text: "Warning", top: "49%", color: "#d97706" },
-            { text: "Safe", top: "69%", color: "#16a34a" },
-          ]}
-        />
-        <GasInfoChartCard
-          title="Gas Level in Next 03 hours"
-          xLabel="12.00    12.01    12.02    12.03    12.04    12.05    12.06"
-          theme={theme}
-          rightLabels={[
-            { text: "Danger", top: "28%", color: "#111827" },
-            { text: "Warning", top: "49%", color: "#111827" },
-            { text: "Safe", top: "69%", color: "#111827" },
-          ]}
-        />
-      </div>
-    </>
-  );
-}
-
 function BottomStatus({
   esp32Status,
   lastUpdate,
@@ -1004,16 +655,11 @@ export default function FireDashboardUI() {
   const [mode, setMode] = useState("dark");
   const [activePage, setActivePage] = useState("fire");
   const [fireData, setFireData] = useState(null);
-  const [gasData, setGasData] = useState(null);
   const [rows, setRows] = useState(defaultRows);
-  const [gasRows, setGasRows] = useState([
-    { timestamp: "--", gasPpm: "--", status: "SAFE", triggered: "NO" },
-  ]);
   const [cloudConnected, setCloudConnected] = useState(false);
   const [chartPoints, setChartPoints] = useState([
     { time: "00:00:01", intensity: 18 },
   ]);
-  const [gasChartPoints, setGasChartPoints] = useState([{ time: "00:00:01", ppm: 320 }]);
 
   const [timeFilter, setTimeFilter] = useState("live");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -1086,64 +732,6 @@ export default function FireDashboardUI() {
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const gasRef = ref(db, "gas_monitoring");
-
-    const unsub = onValue(
-      gasRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        setGasData(data);
-        setCloudConnected((prev) => prev || !!data);
-
-        if (!data) return;
-
-        const gasPpm =
-          typeof data.gas_level_ppm === "number"
-            ? data.gas_level_ppm
-            : typeof data.gas_ppm === "number"
-            ? data.gas_ppm
-            : typeof data.sensor_value === "number"
-            ? data.sensor_value
-            : 320;
-
-        const browserTime = new Date().toLocaleTimeString();
-        const browserDateTime = new Date().toLocaleString();
-
-        setGasChartPoints((prev) => {
-          const updated = [...prev, { time: browserTime, ppm: gasPpm }];
-          return updated.slice(-12);
-        });
-
-        setGasRows((prev) => {
-          const newRow = {
-            timestamp: browserDateTime,
-            gasPpm,
-            status: (data.gas_status || data.status || "SAFE").toUpperCase(),
-            triggered: data.alert_triggered ? "YES" : "NO",
-          };
-
-          const first = prev[0];
-          if (
-            first &&
-            first.gasPpm === newRow.gasPpm &&
-            first.status === newRow.status &&
-            first.triggered === newRow.triggered
-          ) {
-            return [{ ...first, timestamp: browserDateTime }, ...prev.slice(1)];
-          }
-
-          return [newRow, ...prev].slice(0, 6);
-        });
-      },
-      (error) => {
-        console.error("Gas Firebase read error:", error);
-      }
-    );
-
-    return () => unsub();
-  }, []);
-
   const intensityPercent = useMemo(() => {
     if (!fireData) return 18;
     if (typeof fireData.flame_intensity === "number") return fireData.flame_intensity;
@@ -1158,14 +746,6 @@ export default function FireDashboardUI() {
     if (typeof fireData.flame_intensity === "number") return fireData.flame_intensity;
     return 46;
   }, [fireData]);
-
-  const gasLevelPpm = useMemo(() => {
-    if (!gasData) return 320;
-    if (typeof gasData.gas_level_ppm === "number") return gasData.gas_level_ppm;
-    if (typeof gasData.gas_ppm === "number") return gasData.gas_ppm;
-    if (typeof gasData.sensor_value === "number") return gasData.sensor_value;
-    return 320;
-  }, [gasData]);
 
   const statusText = fireData?.status || fireData?.flame_status || "No fire Detected";
   const fireCount = fireData?.fire_count ?? 0;
@@ -1226,20 +806,6 @@ export default function FireDashboardUI() {
     return chartPoints;
   }, [chartPoints]);
 
-  const gasChartData = useMemo(() => {
-    if (!gasChartPoints || gasChartPoints.length === 0) {
-      return [
-        { time: "12:00", ppm: 280 },
-        { time: "12:01", ppm: 320 },
-        { time: "12:02", ppm: 360 },
-        { time: "12:03", ppm: 420 },
-        { time: "12:04", ppm: 510 },
-        { time: "12:05", ppm: 460 },
-      ];
-    }
-    return gasChartPoints;
-  }, [gasChartPoints]);
-
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
       const rowStatus = String(row.status || "").toLowerCase();
@@ -1279,7 +845,7 @@ export default function FireDashboardUI() {
   }, [chartData, timeFilter]);
 
   const renderPageContent = () => {
-    if (activePage !== "fire" && activePage !== "gas") {
+    if (activePage !== "fire") {
       return (
         <div
           style={{
@@ -1295,18 +861,6 @@ export default function FireDashboardUI() {
         >
           {activePage.toUpperCase()} Dashboard Coming Soon
         </div>
-      );
-    }
-
-    if (activePage === "gas") {
-      return (
-        <LPGasDashboardPage
-          gasData={gasData}
-          gasLevelPpm={gasLevelPpm}
-          gasChartData={gasChartData}
-          gasRows={gasRows}
-          theme={theme}
-        />
       );
     }
 
@@ -1424,11 +978,7 @@ export default function FireDashboardUI() {
         >
           <GaugeCard value={intensityPercent} theme={theme} />
           <SignalStrengthCard value={signalStrength} theme={theme} />
-          <ChartCard
-            chartData={filteredChartData}
-            theme={theme}
-            title="Fire Detection in last 24 hours"
-          />
+          <ChartCard chartData={filteredChartData} theme={theme} />
           <AlertsCard alerts={alerts} theme={theme} />
         </div>
 
@@ -1626,8 +1176,6 @@ export default function FireDashboardUI() {
                 >
                   {activePage === "fire"
                     ? "Fire Level Monitoring"
-                    : activePage === "gas"
-                    ? "LP Gas Detection"
                     : `${activePage.toUpperCase()} Dashboard`}
                 </h2>
 
